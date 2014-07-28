@@ -1,0 +1,20 @@
+{
+    "name": "dasprid/shoutirc-php-client",
+    "description": "Client for the ShoutIRC socket server",
+    "license": "BSD-2-clause",
+    "homepage": "https://github.com/DASPRiD/shoutirc-php-client",
+    "authors": [
+        {
+            "name": "DASPRiD",
+            "email": "mail@dasprids.de"
+        }
+    ],
+    "suggest": {
+        "ext-openssl": "Allows using secured connections"
+    },
+    "autoload": {
+        "psr-0": {
+            "ShoutIrc\\": "src/"
+        }
+    }
+}
