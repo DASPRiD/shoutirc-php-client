@@ -88,6 +88,10 @@ class Client
         }
 
         if ($ssl & self::SSL_ENABLE) {
+            if (!extension_loaded('openssl')) {
+                throw new Exception\SslException('OpenSSL extension is not loaded');
+            }
+
             $response = $this->sendCommand(static::RCMD_ENABLE_SSL);
 
             if ($response->getCode() !== Response::RCMD_ENABLE_SSL_ACK && $ssl & static::SSL_REQUIRE) {
