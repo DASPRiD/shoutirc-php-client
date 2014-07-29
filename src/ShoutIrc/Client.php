@@ -59,11 +59,6 @@ class Client
     /**
      * @var int
      */
-    protected $userLevel;
-
-    /**
-     * @var int
-     */
     protected $userFlags;
 
     /**
@@ -76,12 +71,12 @@ class Client
      * @throws Exception\SslException
      * @throws Exception\LoginException
      */
-    public function __construct($host, $port, $username, $password, $ssl = static::SSL_DISABLE)
+    public function __construct($host, $port, $username, $password, $ssl = self::SSL_DISABLE)
     {
         $errno  = null;
         $errstr = null;
 
-        $this->socket = stream_socket_client(sprintf('tcp://%s:%d', $host, $port), $errno, $errstr, 15);
+        $this->socket = stream_socket_client(sprintf('tcp://%s:%d', $host, $port), $errno, $errstr, 10);
 
         if ($this->socket === false) {
             throw new Exception\SocketException($errstr);
@@ -92,23 +87,23 @@ class Client
                 throw new Exception\SslException('OpenSSL extension is not loaded');
             }
 
-            $response = $this->sendCommand(static::RCMD_ENABLE_SSL);
+            $response = $this->sendCommand(self::RCMD_ENABLE_SSL);
 
-            if ($response->getCode() !== Response::RCMD_ENABLE_SSL_ACK && $ssl & static::SSL_REQUIRE) {
+            if ($response->getCode() === Response::RCMD_ENABLE_SSL_ACK) {
+                stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            } elseif ($ssl & self::SSL_REQUIRE) {
                 throw new Exception\SslException('SSL could not be enabled, but is required');
             }
-
-            stream_socket_enable_crypto($this->stream, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }
 
-        $response = $this->sendCommand(static::RCMD_LOGIN, sprintf("%s\xFE%s\xFE\x17", $username, $password));
+        $response = $this->sendCommand(self::RCMD_LOGIN, sprintf("%s\xFE%s\xFE\x17", $username, $password));
 
         if ($response->getCode() !== Response::RCMD_LOGIN_OK) {
             throw new Exception\LoginException('Invalid credentials provided');
         }
 
-        list($this->userLevel, $_, $this->userFlags) = array_values(
-            unpack('Clevel/Cnull/Vflags', $response->getData())
+        list(, $this->userFlags) = array_values(
+            unpack('Cnull/Vflags', $response->getData())
         );
     }
 
@@ -118,16 +113,24 @@ class Client
     }
 
     /**
+     * @return int
+     */
+    public function getUserFlags()
+    {
+        return $this->userFlags;
+    }
+
+    /**
      * @return StreamInfo
-     * @throws Exception\InvalidResponseException
+     * @throws Exception\UnexpectedResponseException
      */
     public function queryStream()
     {
-        $response = $this->sendCommand(static::RCMD_QUERY_STREAM);
+        $response = $this->sendCommand(self::RCMD_QUERY_STREAM);
 
         if ($response->getCode() !== Response::RCMD_STREAM_INFO) {
-            throw new Exception\InvalidResponseException(sprintf(
-                'Received invalid response: %d',
+            throw new Exception\UnexpectedResponseException(sprintf(
+                'Received unexpected response: %d',
                 $response->getCode()
             ));
         }
@@ -155,17 +158,17 @@ class Client
      */
     protected function receiveResponse()
     {
-        $metaData = fgets($this->socket, 8);
+        $metaData = fread($this->socket, 8);
 
-        if ($metaData === false) {
+        if ($metaData === false || strlen($metaData) < 8) {
             throw new Exception\SocketException('Socket closed unexpectedly');
         }
 
         list($code, $length) = array_values(unpack('Vcode/Vlength', $metaData));
 
-        $data = fgets($this->socket, $length);
+        $data = $length ? fread($this->socket, $length) : '';
 
-        if (data === false) {
+        if ($data === false || strlen($data) < $length) {
             throw new Exception\SocketException('Socket closed unexpectedly');
         }
 
