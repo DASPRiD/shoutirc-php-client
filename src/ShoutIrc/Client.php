@@ -129,22 +129,70 @@ class Client
         $response = $this->sendCommand(self::RCMD_QUERY_STREAM);
 
         if ($response->getCode() !== Response::RCMD_STREAM_INFO) {
-            throw new Exception\UnexpectedResponseException(sprintf(
-                'Received unexpected response: %d',
-                $response->getCode()
-            ));
+            throw Exception\UnexpectedResponseException::fromResponse($response);
         }
 
         list($title, $dj, $listeners, $peak, $max) = array_values(
-            unpack('c64title/c64dj/Vlisteners/Vpeak/Vmax', $response->getData())
+            unpack('a64title/a64dj/Vlisteners/Vpeak/Vmax', $response->getData())
         );
 
-        return new StreamInfo($title, $dj, $listeners, $peak, $max);
+        return new StreamInfo(
+            rtrim($title, "\0"),
+            rtrim($dj, "\0"),
+            $listeners,
+            $peak,
+            $max
+        );
     }
 
     /**
-     * @param int    $command
-     * @param string $data
+     * @param  string $usernameOrHostmask
+     * @return UserInfo|null
+     * @throws Exception\UnexpectedResponseException
+     */
+    public function getUserInfo($usernameOrHostmask)
+    {
+        $response = $this->sendCommand(self::RCMD_GETUSERINFO, $usernameOrHostmask);
+
+        if ($response->getCode() === Response::RCMD_USERNOTFOUND) {
+            return null;
+        }
+
+        if ($response->getCode() !== Response::RCMD_USERINFO) {
+            throw Exception\UnexpectedResponseException::fromResponse($response);
+        }
+
+        list($nickname, $password, , $flags) = array_values(
+            unpack('a128nickname/a128password/Vnull/Vflags', $response->getData())
+        );
+
+        $hostmasksData = substr($response->getData(), 268);
+        $numHostmasks  = strlen($hostmasksData) / 128;
+        $hostmasks     = [];
+
+        for ($i = 0; $i < $numHostmasks; ++$i) {
+            // For some reason the supplied number of hostmasks is not correct,
+            // so we rely on the actually supplied data.
+            list($hostmask) = array_values(unpack('a128hostmask', substr($hostmasksData, $i * 128, 128)));
+            $hostmask = rtrim($hostmask, "\0");
+
+            if ($hostmask !== '') {
+                $hostmasks[] = $hostmask;
+            }
+        }
+
+        return new UserInfo(
+            rtrim($nickname, "\0"),
+            rtrim($password, "\0"),
+            $flags,
+            $hostmasks
+        );
+    }
+
+    /**
+     * @param  int    $command
+     * @param  string $data
+     * @return Response
      */
     protected function sendCommand($command, $data = '')
     {
@@ -166,12 +214,17 @@ class Client
 
         list($code, $length) = array_values(unpack('Vcode/Vlength', $metaData));
 
-        $data = $length ? fread($this->socket, $length) : '';
+        $buffer = '';
 
-        if ($data === false || strlen($data) < $length) {
-            throw new Exception\SocketException('Socket closed unexpectedly');
+        do {
+            $buffer .= ($data = $length ? fread($this->socket, $length) : '');
+            $length -= strlen($data);
+        } while ($data !== false && $length > 0);
+
+        if ($length > 0) {
+            throw new Exception\SocketException('Not enough data received');
         }
 
-        return new Response($code, $data);
+        return new Response($code, $buffer);
     }
 }
