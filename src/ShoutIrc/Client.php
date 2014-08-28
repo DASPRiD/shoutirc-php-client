@@ -1,8 +1,6 @@
 <?php
 namespace ShoutIrc;
 
-use ShoutIrc\Exception;
-
 /**
  * Simple client for ShoutIRC.
  *
@@ -269,11 +267,136 @@ class Client
     }
 
     /**
+     * Makes the source plugin count you in.
+     *
+     * This eventually stops the source plugin playing after the current song.
+     */
+    public function countdownSource()
+    {
+        $this->sendCommand(static::RCMD_SRC_COUNTDOWN);
+    }
+
+    /**
      * Restarts the bot.
      */
     public function restartBot()
     {
         $this->sendCommand(static::RCMD_RESTART);
+    }
+
+    /**
+     * Makes the source plugin stop immediately.
+     */
+    public function forceSourceOff()
+    {
+        $this->sendCommand(static::RCMD_SRC_FORCE_OFF);
+    }
+
+    /**
+     * Makes the source plugin start immediately.
+     */
+    public function forceSourceOn()
+    {
+        $this->sendCommand(static::RCMD_SRC_FORCE_ON);
+    }
+
+    /**
+     * Skips the currently playing song played by the source plugin.
+     */
+    public function skipSourceSong()
+    {
+        $this->sendCommand(static::RCMD_SRC_NEXT);
+    }
+
+    /**
+     * Reloads the source plugin.
+     */
+    public function reloadSource()
+    {
+        $this->sendCommand(static::RCMD_SRC_RELOAD);
+    }
+
+    /**
+     * Rates a given song.
+     *
+     * Returns false if the given filename does not exist.
+     *
+     * @param  string $nickname
+     * @param  int    $rating
+     * @param  string $filename
+     * @return bool
+     * @throws Exception\OutOfRangeException
+     */
+    public function rateSourceSong($nickname, $rating, $filename)
+    {
+        $rating = (int) $rating;
+
+        if ($rating < 0 || $rating > 5) {
+            throw new Exception\OutOfRangeException(sprintf(
+                'Rating must be an integer between 0 and 5, %s given',
+                $rating
+            ));
+        }
+
+        $response = $this->sendCommand(
+            static::RCMD_SRC_RATE_SONG,
+            sprintf("%s\xFE%s\xFE%s", $nickname, $rating, $filename)
+        );
+
+        return $response->getCode() !== Response::RCMD_GENERIC_ERROR;
+    }
+
+    /**
+     * Gets the song filename which is currently played by the source plugin.
+     *
+     * @return string|null
+     */
+    public function getSourceSong()
+    {
+        $response = $this->sendCommand(static::RCMD_SRC_GET_SONG);
+
+        if ($response->getCode() === Response::RCMD_GENERIC_MSG) {
+            return $response->getData();
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the status of the source plugin.
+     *
+     * Possible string responses are:
+     *  - playing
+     *  - connecting
+     *  - stoppped
+     *
+     * @return string|null
+     */
+    public function getSourceStatus()
+    {
+        $response = $this->sendCommand(static::RCMD_SRC_STATUS);
+
+        if ($response->getCode() === Response::RCMD_GENERIC_MSG) {
+            return $response->getData();
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the name of the source plugin.
+     *
+     * @return string|null
+     */
+    public function getSourceName()
+    {
+        $response = $this->sendCommand(static::RCMD_SRC_GET_NAME);
+
+        if ($response->getCode() === Response::RCMD_GENERIC_MSG) {
+            return $response->getData();
+        }
+
+        return null;
     }
 
     /**
