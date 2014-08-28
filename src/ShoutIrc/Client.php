@@ -204,6 +204,45 @@ class Client
     }
 
     /**
+     * @param  string $query
+     * @return bool
+     */
+    public function sendRequest($query)
+    {
+        $response = $this->sendCommand(static::RCMD_REQ, $query);
+        return $response->getCode() !== Response::RCMD_GENERIC_ERROR;
+    }
+
+    /**
+     * @return bool
+     */
+    public function toggleDoSpamFlag()
+    {
+        $response = $this->sendCommand(static::RCMD_DOSPAM);
+        return $response->getData() === 'Spamming is now: On';
+    }
+
+    public function killBot()
+    {
+        $this->sendCommand(static::RCMD_DIE);
+    }
+
+    /**
+     * @param  string $message
+     * @return bool
+     */
+    public function broadcastMessage($message)
+    {
+        $response = $this->sendCommand(static::RCMD_BROADCAST_MSG, $message);
+        return $response->getData() === 'Broadcast Sent!';
+    }
+
+    public function restartBot()
+    {
+        $this->sendCommand(static::RCMD_RESTART);
+    }
+
+    /**
      * @param  int    $command
      * @param  string $data
      * @return Response
