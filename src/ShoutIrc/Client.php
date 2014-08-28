@@ -190,6 +190,20 @@ class Client
     }
 
     /**
+     * @return string|null
+     */
+    public function getCurrentDj()
+    {
+        $response = $this->sendCommand(static::RCMD_REQ_CURRENT);
+
+        if ($response->getCode() === Response::RCMD_GENERIC_MSG) {
+            return $response->getData();
+        }
+
+        return null;
+    }
+
+    /**
      * @param  int    $command
      * @param  string $data
      * @return Response
