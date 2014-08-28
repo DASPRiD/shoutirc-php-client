@@ -3,6 +3,12 @@ namespace ShoutIrc;
 
 use ShoutIrc\Exception;
 
+/**
+ * Simple client for ShoutIRC.
+ *
+ * This client supports all commands but those which require to actively become
+ * the current DJ.
+ */
 class Client
 {
     /**
@@ -113,6 +119,8 @@ class Client
     }
 
     /**
+     * Gets flags of the user you are authenticated with.
+     *
      * @return int
      */
     public function getUserFlags()
@@ -121,6 +129,8 @@ class Client
     }
 
     /**
+     * Queries for stream informations.
+     *
      * @return StreamInfo
      * @throws Exception\UnexpectedResponseException
      */
@@ -146,6 +156,8 @@ class Client
     }
 
     /**
+     * Gets information about a specific user.
+     *
      * @param  string $usernameOrHostmask
      * @return UserInfo|null
      * @throws Exception\UnexpectedResponseException
@@ -190,6 +202,8 @@ class Client
     }
 
     /**
+     * Gets the currently logged in DJ.
+     *
      * @return string|null
      */
     public function getCurrentDj()
@@ -204,6 +218,10 @@ class Client
     }
 
     /**
+     * Sends a request with a given text or filename.
+     *
+     * Returns true when the request could be fulfilled, false otherwise.
+     *
      * @param  string $query
      * @return bool
      */
@@ -214,6 +232,10 @@ class Client
     }
 
     /**
+     * Toggles the DoSpam flag on the bot, so messages can be broadcasted.
+     *
+     * Returns true when the flag is switched to "On", false otherwise.
+     *
      * @return bool
      */
     public function toggleDoSpamFlag()
@@ -222,12 +244,21 @@ class Client
         return $response->getData() === 'Spamming is now: On';
     }
 
+    /**
+     * Kills the bot.
+     */
     public function killBot()
     {
         $this->sendCommand(static::RCMD_DIE);
     }
 
     /**
+     * Broadcasts a message to all channels.
+     *
+     * This command requires the DoSpam flag to be enabled. If it is not
+     * enabled or no message has been specified, the method will return false.
+     *
+     * @see    self::toggleDoSpamFlag()
      * @param  string $message
      * @return bool
      */
@@ -237,12 +268,17 @@ class Client
         return $response->getData() === 'Broadcast Sent!';
     }
 
+    /**
+     * Restarts the bot.
+     */
     public function restartBot()
     {
         $this->sendCommand(static::RCMD_RESTART);
     }
 
     /**
+     * Sends any command to the server.
+     *
      * @param  int    $command
      * @param  string $data
      * @return Response
@@ -254,6 +290,8 @@ class Client
     }
 
     /**
+     * Receives and unpacks the response after sending a command.
+     *
      * @return Response
      * @throws Exception\SocketException
      */

@@ -1,6 +1,9 @@
 <?php
 namespace ShoutIrc;
 
+/**
+ * Response container.
+ */
 class Response
 {
     /**#@+
@@ -42,6 +45,8 @@ class Response
     }
 
     /**
+     * Gets the response code.
+     *
      * @return int
      */
     public function getCode()
@@ -50,6 +55,8 @@ class Response
     }
 
     /**
+     * Gets the data send with the response.
+     *
      * @return string
      */
     public function getData()

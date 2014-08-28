@@ -1,6 +1,9 @@
 <?php
 namespace ShoutIrc;
 
+/**
+ * User information container.
+ */
 class UserInfo
 {
     /**
@@ -38,6 +41,8 @@ class UserInfo
     }
 
     /**
+     * Gets the nickname of the user.
+     *
      * @return string
      */
     public function getNickname()
@@ -46,6 +51,8 @@ class UserInfo
     }
 
     /**
+     * Gets the password of the user.
+     *
      * @return string
      */
     public function getPassword()
@@ -54,6 +61,8 @@ class UserInfo
     }
 
     /**
+     * Gets the flags of the user.
+     *
      * @return int
      */
     public function getFlags()
@@ -62,6 +71,8 @@ class UserInfo
     }
 
     /**
+     * Gets all hostnames of the user.
+     *
      * @return array
      */
     public function getHostmasks()

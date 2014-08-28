@@ -9,6 +9,9 @@
             "email": "mail@dasprids.de"
         }
     ],
+    "require": {
+        "php": ">=5.4.0"
+    },
     "suggest": {
         "ext-openssl": "Allows using secured connections"
     },

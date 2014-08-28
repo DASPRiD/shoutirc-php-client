@@ -1,6 +1,9 @@
 <?php
 namespace ShoutIrc;
 
+/**
+ * Stream information container.
+ */
 class StreamInfo
 {
     /**
@@ -45,6 +48,8 @@ class StreamInfo
     }
 
     /**
+     * Gets the title of the currently playing song.
+     *
      * @return string
      */
     public function getTitle()
@@ -53,6 +58,8 @@ class StreamInfo
     }
 
     /**
+     * Gets the currently active DJ.
+     *
      * @return string
      */
     public function getDj()
@@ -61,6 +68,8 @@ class StreamInfo
     }
 
     /**
+     * Gets the number of connected listeners.
+     *
      * @return int
      */
     public function getListeners()
@@ -69,6 +78,8 @@ class StreamInfo
     }
 
     /**
+     * Gets the peak of connected listeners.
+     *
      * @return int
      */
     public function getPeak()
@@ -77,6 +88,8 @@ class StreamInfo
     }
 
     /**
+     * Gets the maximum number of allowed listeners.
+     *
      * @return int
      */
     public function getMax()
