@@ -52,6 +52,8 @@ class Client
     const RCMD_SRC_RATE_SONG = 0x36;
     const RCMD_SRC_STATUS    = 0x37;
     const RCMD_SRC_GET_NAME  = 0x38;
+    const RCMD_SRC_RELAY     = 0x39;
+    const RCMD_SRC_GET_SONG_INFO = 0x3A;
     const RCMD_GETUSERINFO   = 0x40;
     /**#@-*/
 
@@ -100,7 +102,7 @@ class Client
             }
         }
 
-        $response = $this->sendCommand(self::RCMD_LOGIN, sprintf("%s\xFE%s\xFE\x17", $username, $password));
+        $response = $this->sendCommand(self::RCMD_LOGIN, sprintf("%s\xFE%s\xFE\x18", $username, $password));
 
         if ($response->getCode() !== Response::RCMD_LOGIN_OK) {
             throw new Exception\LoginException('Invalid credentials provided');
@@ -126,6 +128,38 @@ class Client
         return $this->userFlags;
     }
 
+    /**
+     * Queries for stream informations.
+     *
+     * @return SongInfo
+     * @throws Exception\UnexpectedResponseException
+     */
+    public function querySong()
+    {
+        $response = $this->sendCommand(self::RCMD_SRC_GET_SONG_INFO);
+        if ($response->getCode() !== Response::RCMD_SONG_INFO) {
+            throw Exception\UnexpectedResponseException::fromResponse($response);
+        }
+
+
+        list($file_id, $fn, $artist, $album, $title, $genre, $songLen, $is_request, $requested_by, $playback_position, $playback_length) = array_values(
+            unpack('Ifile_id/a1024fn/a256artist/a256album/a256title/a128genre/IsongLen/Vis_request/a64requested_by/Vplayback_position/Vplayback_length', $response->getData())
+        );
+
+        return new SongInfo(
+            $file_id,
+            rtrim($fn, "\0"),
+            rtrim($artist, "\0"),
+            rtrim($album, "\0"),
+            rtrim($title, "\0"),
+            rtrim($genre, "\0"),
+            $songLen,
+            $is_request,
+            rtrim($requested_by, "\0"),
+            $playback_position,
+            $playback_length
+        );
+    }
     /**
      * Queries for stream informations.
      *
@@ -226,6 +260,21 @@ class Client
     public function sendRequest($query)
     {
         $response = $this->sendCommand(static::RCMD_REQ, $query);
+        return $response->getCode() !== Response::RCMD_GENERIC_ERROR;
+    }
+
+    /**
+     * Relay a stream, URL or filename.
+     *
+     * Returns true when the request could be fulfilled, false otherwise.
+     *
+     * @param  string $query
+     * @return bool
+     */
+    public function autodjRelay($query)
+    {
+        $response = $this->sendCommand(static::RCMD_SRC_RELAY, $query);
+        dd($response);
         return $response->getCode() !== Response::RCMD_GENERIC_ERROR;
     }
 
