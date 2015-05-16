@@ -1,13 +1,17 @@
 {
-    "name": "dasprid/shoutirc-php-client",
+    "name": "hivemedia/shoutirc-php-client",
     "description": "Client for the ShoutIRC socket server",
     "license": "BSD-2-clause",
-    "homepage": "https://github.com/DASPRiD/shoutirc-php-client",
+    "homepage": "https://github.com/HiveMedia/shoutirc-php-client",
     "authors": [
         {
             "name": "DASPRiD",
             "email": "mail@dasprids.de"
-        }
+        },
+      {
+        "name": "Nyan",
+        "email": "kyle.hunter@hivemedia.net.au"
+      }
     ],
     "require": {
         "php": ">=5.4.0"
