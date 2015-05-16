@@ -18,6 +18,7 @@ class Response
     const RCMD_REQ_INCOMING   = 0x12;
     const RCMD_STREAM_INFO    = 0x13;
     const RCMD_FIND_QUERY     = 0x14;
+    const RCMD_SONG_INFO      = 0x30;
     const RCMD_USERINFO       = 0x40;
     const RCMD_USERNOTFOUND   = 0x41;
     const RCMD_GENERIC_MSG    = 0xFE;
